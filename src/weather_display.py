@@ -5,11 +5,11 @@ author: Wiley Matthews
 """
 
 import requests
-import json
 import tkinter as tk
 from urllib.request import urlopen
 
 api_key = '286145f3e532733b94b26fa96949232d'
+darkSky_key = 'b3f609149b1cdc25c712bba1f8c20430'
 
 
 def init_display():
