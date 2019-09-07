@@ -16,7 +16,9 @@ from PIL import Image, ImageTk
 # Local libraries.
 from src import weather
 
-FONT_SIZE = 8
+SMALL_FONT = 8
+MEDIUM_FONT = 10
+LARGE_FONT = 15
 PHOTOS = []  # Probably the wrong way to do this, but tk needs me to keep references to the images.
 
 
@@ -58,23 +60,43 @@ def main():
     canvas = tk.Canvas(root, bg='white', width=width//2, height=height)
     canvas.grid(row=0, column=0, rowspan=num_rows-2, columnspan=num_columns//2)
     canvas.create_image(width//2, 0, image=prog_chart, anchor='ne')
+    PHOTOS.append(prog_chart)
 
     # Get and display weather data
-    tk.Label(root, text="Today's Weather", font=("Helvetica", 20)).grid(row=0, column=7, columnspan=3)
+    tk.Label(root, text="Today's Weather", font=("Helvetica", 20)).grid(row=0, column=6, columnspan=5)
 
     current, outlook, forecast = weather.get_forecast()  # GET WEATHER DATA
 
     curr_image = resize_img(get_image(current['icon']), 100, 100)
     curr_photo = ImageTk.PhotoImage(curr_image)
+    PHOTOS.append(curr_photo)
 
+    # Current weather frame
     current_frame = tk.Frame(root)
-    tk.Label(current_frame, text=current['summary'], font=("Helvetica", FONT_SIZE)).pack()
+    tk.Label(current_frame, text="Current Weather", font=("Helvetica", LARGE_FONT)).pack()
+    tk.Label(current_frame, text=current['summary'], font=("Helvetica", MEDIUM_FONT)).pack()
     cv1 = tk.Canvas(current_frame, bg='#d1d1d1', width=curr_photo.width(), height=curr_photo.height())
     cv1.pack()
     cv1.create_image(0, 0, image=curr_photo, anchor='nw')
-    tk.Label(current_frame, text=current['date'] + " - " + current['time'], font=("Helvetica", FONT_SIZE)).pack()
-    tk.Label(current_frame, text=str(current['precipProbability']) + " - " + str(current['temperature']), font=("Helvetica", FONT_SIZE)).pack()
-    current_frame.grid(row=1, column=8)
+    tk.Label(current_frame, text=current['time'], font=("Helvetica", MEDIUM_FONT)).pack()
+    tk.Label(current_frame,
+             text="{:.0%} - {}\u00B0".format(current['precipProbability'], current['temperature']),
+             font=("Helvetica", SMALL_FONT)).pack()
+    current_frame.grid(row=1, column=6, rowspan=1, columnspan=2, sticky='NE')
+
+    out_image = resize_img(get_image(outlook['icon']), 100, 100)
+    out_photo = ImageTk.PhotoImage(out_image)
+    PHOTOS.append(out_photo)
+
+    # Outlook weather frame
+    out_frame = tk.Frame(root)
+    tk.Label(out_frame, text="Weather Outlook", font=("Helvetica", LARGE_FONT)).pack()
+    tk.Label(out_frame, text=outlook['summary'], font=("Helvetica", MEDIUM_FONT)).pack()
+    cv1 = tk.Canvas(out_frame, bg='#d1d1d1', width=out_photo.width(), height=out_photo.height())
+    cv1.pack()
+    cv1.create_image(0, 0, image=out_photo, anchor='nw')
+    tk.Label(out_frame, text=current['date'], font=("Helvetica", MEDIUM_FONT)).pack()
+    out_frame.grid(row=1, column=8, rowspan=1, columnspan=2, sticky='NE')
 
     for_itr = 0
     for i in range(2):
@@ -85,14 +107,15 @@ def main():
             for_image = resize_img(get_image(hour_data['icon']), 100, 100)
             for_photo = ImageTk.PhotoImage(for_image)
             PHOTOS.append(for_photo)
-            tk.Label(for_frame, text=hour_data['summary'], font=("Helvetica", FONT_SIZE)).pack()
+            tk.Label(for_frame, text=hour_data['summary'], font=("Helvetica", MEDIUM_FONT)).pack()
             cv = tk.Canvas(for_frame, bg='#d1d1d1', width=for_photo.width(), height=for_photo.height())
             cv.pack()
             cv.create_image(0, 0, image=for_photo, anchor='nw')
-            tk.Label(for_frame, text=hour_data['date'] + " - " + hour_data['time'], font=("Helvetica", FONT_SIZE)).pack()
-            tk.Label(for_frame, text=str(hour_data['precipProbability']) + " - " + str(hour_data['temperature']),
-                     font=("Helvetica", FONT_SIZE)).pack()
-            for_frame.grid(row=i+2, column=j)
+            tk.Label(for_frame, text=hour_data['time'], font=("Helvetica", MEDIUM_FONT)).pack()
+            tk.Label(for_frame,
+                     text="{:.0%} - {}\u00B0".format(hour_data['precipProbability'], hour_data['temperature']),
+                     font=("Helvetica", SMALL_FONT)).pack()
+            for_frame.grid(row=i+2, column=j, padx=(15, 0), sticky='NW', pady=(0, 7))
 
     root.mainloop()
 
