@@ -8,10 +8,11 @@ date: 9/2/2019
 # Standard libraries.
 import tkinter as tk
 import io
-import os
+from datetime import datetime
 
 # External libraries.
 from PIL import Image, ImageTk
+import keyboard
 
 # Local libraries.
 from src import weather
@@ -20,6 +21,9 @@ SMALL_FONT = 8
 MEDIUM_FONT = 10
 LARGE_FONT = 15
 PHOTOS = []  # Probably the wrong way to do this, but tk needs me to keep references to the images.
+
+window = None
+root = None
 
 
 def get_image(icon):
@@ -32,18 +36,12 @@ def resize_img(img, w, h):
     return img.resize((w, h), Image.ANTIALIAS)
 
 
-def main():
-    root = tk.Tk()
-    root.title("Briefer")
-
-    root.overrideredirect(True)
-    root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
-    root.focus_set()  # <-- move focus to this widget
-    root.bind("<Escape>", lambda e: e.widget.quit())
+def display_weather():
+    global root
 
     # Size screen
     width = root.winfo_screenwidth()
-    height = round(root.winfo_screenheight()*1)
+    height = round(root.winfo_screenheight() * 1)
 
     print(width, height)
 
@@ -57,13 +55,14 @@ def main():
 
     # Get and display prog chart
     prog_chart = ImageTk.PhotoImage(Image.open(io.BytesIO(weather.get_prog())))
-    canvas = tk.Canvas(root, bg='white', width=width//2, height=height)
-    canvas.grid(row=0, column=0, rowspan=num_rows-2, columnspan=num_columns//2)
-    canvas.create_image(width//2, 0, image=prog_chart, anchor='ne')
+    canvas = tk.Canvas(root, bg='white', width=width // 2, height=height)
+    canvas.grid(row=0, column=0, rowspan=num_rows - 2, columnspan=num_columns // 2)
+    canvas.create_image(width // 2, 0, image=prog_chart, anchor='ne')
     PHOTOS.append(prog_chart)
 
     # Get and display weather data
-    tk.Label(root, text="Today's Weather", font=("Helvetica", 20)).grid(row=0, column=6, columnspan=5)
+    tk.Label(root, text="Today's Weather. Last Updated: {}".format(datetime.now().strftime("%I:%M:%S %p")),
+             font=("Helvetica", 20)).grid(row=0, column=6, columnspan=5)
 
     current, outlook, forecast = weather.get_forecast()  # GET WEATHER DATA
 
@@ -100,7 +99,7 @@ def main():
 
     for_itr = 0
     for i in range(2):
-        for j in range(num_columns//2, num_columns-1):
+        for j in range(num_columns // 2, num_columns - 1):
             hour_data = forecast[for_itr]
             for_itr += 1
             for_frame = tk.Frame(root)
@@ -115,9 +114,41 @@ def main():
             tk.Label(for_frame,
                      text="{:.0%} - {}\u00B0".format(hour_data['precipProbability'], hour_data['temperature']),
                      font=("Helvetica", SMALL_FONT)).pack()
-            for_frame.grid(row=i+2, column=j, padx=(15, 0), sticky='NW', pady=(0, 7))
+            for_frame.grid(row=i + 2, column=j, padx=(15, 0), sticky='NW', pady=(0, 7))
 
-    root.mainloop()
+
+def main():
+    global window
+    global root
+    window = tk.Tk()
+    window.title("Briefer")
+
+    root = tk.Frame(window)
+
+    window.overrideredirect(True)
+    window.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
+    window.focus_set()  # <-- move focus to this widget
+    window.bind("<Escape>", lambda e: e.widget.quit())
+
+    display_weather()
+    root.pack()
+
+    t = datetime.now().timestamp()
+    while True:
+        try:
+            if keyboard.is_pressed('esc'):
+                break
+            else:
+                pass
+        except:
+            pass
+        dt = datetime.now().timestamp() - t # Units of dt is [seconds]
+        if dt > (60 * 5):  # Wait 5 minutes between updates.
+            root.pack_forget()
+            display_weather()
+            root.pack()
+            t = datetime.now().timestamp()
+        window.update()
 
 
 if __name__ == '__main__':
