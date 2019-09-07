@@ -15,29 +15,14 @@ from PIL import Image, ImageTk
 # Local libraries.
 from src import weather
 
-
-class WeatherBox(tk.Frame):
-    def __init__(self, w_data):
-        tk.Frame.__init__(self)
-        self.w_data = w_data
-        self.pack(side='left')
-        self.make_content()
-
-    def make_content(self):
-        self.photo = get_image()
-        tk.Label(self, text=self.w_data['summary'] + " - " + self.w_data['time'], font=("Helvetica", 10)).pack(
-            side='top')  # .grid(row=pos[0], column=pos[1])
-        self.cv = tk.Canvas(self, bg='#d1d1d1', width=self.photo.width(), height=self.photo.height())
-        self.cv.pack(side='top')
-        self.cv.create_image(0, 0, image=self.photo, anchor='nw')
-        tk.Label(self, text=self.w_data['date'] + " - " + self.w_data['time'], font=("Helvetica", 10)).pack(side='top')
+FONT_SIZE = 8
+PHOTOS = []
 
 
-
-def get_image():
-    sym = r'C:\Users\Wiley\Documents\python_projects\Briefer\assets\cloudy.png'  # static path for now.
+def get_image(icon):
+    sym = r'C:\Users\Wiley\Documents\python_projects\Briefer\assets\{}.png'.format(icon)  # static path for now.
     sym_image = Image.open(sym)
-    return ImageTk.PhotoImage(sym_image)
+    return sym_image
 
 
 def resize_img(img, w, h):
@@ -48,10 +33,16 @@ def main():
     root = tk.Tk()
     root.title("Briefer")
 
+
+    root.overrideredirect(True)
+    root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
+    root.focus_set()  # <-- move focus to this widget
+    root.bind("<Escape>", lambda e: e.widget.quit())
+
     # Size screen
     width = root.winfo_screenwidth()
-    height = round(root.winfo_screenheight()*0.9)
-    root.geometry('%sx%s' % (width, height))
+    height = round(root.winfo_screenheight()*1)
+    # root.geometry('%sx%s' % (width, height))
 
     print(width, height)
 
@@ -87,17 +78,16 @@ def main():
 
     current, outlook, forecast = weather.get_forecast()  # GET WEATHER DATA
 
-    sym = r'C:\Users\Wiley\Documents\python_projects\Briefer\assets\cloudy.png'  # static path for now.
-    sym_image = resize_img(Image.open(sym), 100, 100)
-    photo = ImageTk.PhotoImage(sym_image)
+    curr_image = resize_img(get_image(current['icon']), 100, 100)
+    curr_photo = ImageTk.PhotoImage(curr_image)
 
     current_frame = tk.Frame(root)
-    tk.Label(current_frame, text=current['summary'], font=("Helvetica", 10)).pack()
-    cv1 = tk.Canvas(current_frame, bg='#d1d1d1', width=photo.width(), height=photo.height())
+    tk.Label(current_frame, text=current['summary'], font=("Helvetica", FONT_SIZE)).pack()
+    cv1 = tk.Canvas(current_frame, bg='#d1d1d1', width=curr_photo.width(), height=curr_photo.height())
     cv1.pack()
-    cv1.create_image(0, 0, image=photo, anchor='nw')
-    tk.Label(current_frame, text=current['date'] + " - " + current['time'], font=("Helvetica", 10)).pack()
-    tk.Label(current_frame, text=str(current['precipProbability']) + " - " + str(current['temperature']), font=("Helvetica", 10)).pack()
+    cv1.create_image(0, 0, image=curr_photo, anchor='nw')
+    tk.Label(current_frame, text=current['date'] + " - " + current['time'], font=("Helvetica", FONT_SIZE)).pack()
+    tk.Label(current_frame, text=str(current['precipProbability']) + " - " + str(current['temperature']), font=("Helvetica", FONT_SIZE)).pack()
     current_frame.grid(row=1, column=8)
     #
     # tk.Label(forecast_summary, text="Summary", font=("Helvetica", 20)).pack(side='bottom')
@@ -105,30 +95,23 @@ def main():
     # for i in range(5):
     #     tk.Label(forecast_upper, text="SummaryU", font=("Helvetica", 10)).grid(row=0, column=i)
     #     tk.Label(forecast_upper, text="SummaryL", font=("Helvetica", 10)).grid(row=1, column=i)
+    for_itr = 0
     for i in range(2):
-        for j in range(num_columns//2, num_columns):
+        for j in range(num_columns//2, num_columns-1):
+            hour_data = forecast[for_itr]
+            for_itr += 1
             for_frame = tk.Frame(root)
-            tk.Label(for_frame, text=current['summary'], font=("Helvetica", 10)).pack()
-            cv = tk.Canvas(for_frame, bg='#d1d1d1', width=photo.width(), height=photo.height())
+            for_image = resize_img(get_image(hour_data['icon']), 100, 100)
+            for_photo = ImageTk.PhotoImage(for_image)
+            PHOTOS.append(for_photo)
+            tk.Label(for_frame, text=hour_data['summary'], font=("Helvetica", FONT_SIZE)).pack()
+            cv = tk.Canvas(for_frame, bg='#d1d1d1', width=for_photo.width(), height=for_photo.height())
             cv.pack()
-            cv.create_image(0, 0, image=photo, anchor='nw')
-            tk.Label(for_frame, text=current['date'] + " - " + current['time'], font=("Helvetica", 10)).pack()
-            tk.Label(for_frame, text=str(current['precipProbability']) + " - " + str(current['temperature']),
-                     font=("Helvetica", 10)).pack()
+            cv.create_image(0, 0, image=for_photo, anchor='nw')
+            tk.Label(for_frame, text=hour_data['date'] + " - " + hour_data['time'], font=("Helvetica", FONT_SIZE)).pack()
+            tk.Label(for_frame, text=str(hour_data['precipProbability']) + " - " + str(hour_data['temperature']),
+                     font=("Helvetica", FONT_SIZE)).pack()
             for_frame.grid(row=i+2, column=j)
-
-    # for i in range(num_rows):
-    #     for j in range(num_columns//2, num_columns):
-    #         tk.Label(root, text="grid({},{})".format(i, j)).grid(row=i, column=j)
-
-
-    # stuff = [[],[]]
-    # for i in range(3):
-    #     stuff [0].append(WeatherBox(forecast_upper, (0, 0), current).make_content())
-    # for i in range(3):
-    #     stuff[1].append(WeatherBox(forecast_lower, (0, 0), current).make_content())
-
-    # COLOR_BOIS = ('orange', 'green', 'purple', 'pink', 'blue', 'red')
 
     root.mainloop()
 

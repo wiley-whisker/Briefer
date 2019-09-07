@@ -1,15 +1,12 @@
-import tkinter as tk
+from tkinter import *
 
-root = tk.Tk()
+root = Tk()
 
-x = tk.Frame(root, bg='red', width=100, height=100)
-x.grid_propagate(0)
-tk.Label(x, text="fuck").grid()
-y = tk.Frame(root, bg='blue')
-z = tk.Frame(root, bg='yellow')
-
-x.grid(row=0, rowspan=2)
-y.grid(row=0, column=1)
-z.grid(row=1, column=1)
+w = Label(root, text="Hello, world!")
+root.overrideredirect(True)
+root.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
+root.focus_set()  # <-- move focus to this widget
+root.bind("<Escape>", lambda e: e.widget.quit())
+w.pack()
 
 root.mainloop()
