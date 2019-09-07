@@ -6,6 +6,7 @@ date: 9/2/2019
 """
 
 import requests
+import io
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from datetime import datetime
@@ -33,7 +34,7 @@ def get_forecast():
                 'summary': weather_data['currently']['summary'],
                 'icon': weather_data['currently']['icon'],
                 'precipProbability': weather_data['currently']['precipProbability'],
-                'temperature': weather_data['currently']['temperature']
+                'temperature': round(weather_data['currently']['temperature'])
             }
 
     gen_forecast = {
@@ -45,12 +46,12 @@ def get_forecast():
     for i in range(10):
         hourly_forecast.append(
             {
-                'time': datetime.fromtimestamp(weather_data['hourly']['data'][i]['time']).strftime("%m/%d - %I:%M %p"),
+                'time': datetime.fromtimestamp(weather_data['hourly']['data'][i]['time']).strftime("%I:%M %p"),
                 'date': datetime.fromtimestamp(weather_data['hourly']['data'][i]['time']).strftime("%m/%d"),
                 'summary': weather_data['hourly']['data'][i]['summary'],
                 'icon': weather_data['hourly']['data'][i]['icon'],
                 'precipProbability': weather_data['hourly']['data'][i]['precipProbability'],
-                'temperature': weather_data['hourly']['data'][i]['temperature']
+                'temperature': round(weather_data['hourly']['data'][i]['temperature'])
             }
         )
     return current_data, gen_forecast, hourly_forecast
