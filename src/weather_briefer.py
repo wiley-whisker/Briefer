@@ -15,7 +15,7 @@ from PIL import Image, ImageTk
 import keyboard
 
 # Local libraries.
-from src import weather
+import weather  # Pycharm says this is wrong, but this works when ran from bash and pycharm itself.
 
 SMALL_FONT = 8
 MEDIUM_FONT = 10
