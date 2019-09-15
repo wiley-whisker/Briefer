@@ -7,7 +7,8 @@ date: 9/2/2019
 
 # Standard libraries.
 import tkinter as tk
-import io
+import io  # BytesIO
+import sys
 from datetime import datetime
 
 # External libraries.
@@ -27,16 +28,32 @@ root = None
 
 
 def get_image(icon):
-    image_dir = __file__ + '/../../assets/{}.png'.format(icon)
+    """
+    Gets appropriate image for weather.
+    :param icon: str icon name of weather conditions
+    :return: PIL.Image icon for weather conditions.
+    """
+    image_dir = '../assets/{}.png'.format(icon)
     sym_image = Image.open(image_dir)
     return sym_image
 
 
 def resize_img(img, w, h):
+    """
+    Resize an image.
+    :param img: PIL.Image
+    :param w: int new width in pixels
+    :param h: int new height in pixels
+    :return: PIL.Image resized Image.
+    """
     return img.resize((w, h), Image.ANTIALIAS)
 
 
 def display_weather():
+    """
+    Update weather conditions and display on the tkinter window.
+    :return: None
+    """
     global root
 
     # Size screen
@@ -118,6 +135,11 @@ def display_weather():
 
 
 def main():
+    """
+    Creates the window and packs with the root frame. This will continualy display the weather display and update the
+    weather every x minutes. The time interval for updates must be supplied as a command line argument.
+    :return: None
+    """
     global window
     global root
     window = tk.Tk()
@@ -125,7 +147,7 @@ def main():
 
     root = tk.Frame(window)
 
-    window.overrideredirect(True)
+    # window.overrideredirect(True)  # Commented out due to issues with Esc key not closing on raspberry pi
     window.geometry("{0}x{1}+0+0".format(root.winfo_screenwidth(), root.winfo_screenheight()))
     window.focus_set()  # <-- move focus to this widget
     window.bind("<Escape>", lambda e: e.widget.quit())
@@ -133,22 +155,26 @@ def main():
     display_weather()
     root.pack()
 
+    update_interval = int(sys.argv[1])
     t = datetime.now().timestamp()
-    while True:
-        try:
-            if keyboard.is_pressed('esc'):
-                break
-            else:
+    try:
+        while True:
+            try:
+                if keyboard.is_pressed('esc'):
+                    break
+                else:
+                    pass
+            except:
                 pass
-        except:
-            pass
-        dt = datetime.now().timestamp() - t # Units of dt is [seconds]
-        if dt > (60 * 5):  # Wait 5 minutes between updates.
-            root.pack_forget()
-            display_weather()
-            root.pack()
-            t = datetime.now().timestamp()
-        window.update()
+            dt = datetime.now().timestamp() - t  # Units of dt is [seconds]
+            if dt > (60 * update_interval):  # Wait 5 minutes between updates.
+                root.pack_forget()
+                display_weather()
+                root.pack()
+                t = datetime.now().timestamp()
+            window.update()
+    except tk.TclError:
+        pass  # This is so that when update is called after the window has been terminated, python closes nicely.
 
 
 if __name__ == '__main__':

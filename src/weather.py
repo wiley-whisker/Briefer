@@ -6,17 +6,27 @@ date: 9/2/2019
 """
 
 import requests
-import io
 from bs4 import BeautifulSoup
 from urllib.request import urlopen
 from datetime import datetime
 
+
+# API Keys
+DARKSKY_KEY = 'b3f609149b1cdc25c712bba1f8c20430'  # Probably not the best idea to have my api key on github... but if it
+                                                  # becomes a problem I'll deal with it then. This is good for now so
+                                                  # that anyone can clone this repo and have a working demo.
+
+# URLs
 AWC_BASE_URL = 'https://www.aviationweather.gov'
 AWC_PROG_PAGE = 'https://www.aviationweather.gov/progchart/sfc'
-DARKSKY_HOURLY = 'https://api.darksky.net/forecast/b3f609149b1cdc25c712bba1f8c20430/43.15,-77.68?exclude=minutely,daily,alerts,flags'
+DARKSKY_HOURLY = 'https://api.darksky.net/forecast/{}/43.15,-77.68?exclude=minutely,daily,alerts,flags'.format(DARKSKY_KEY)
 
 
 def get_prog():
+    """
+    Parses Aviation Weather center for the most current surface prognostic chart and returns the image as bytes.
+    :return: bytes Prog chart image
+    """
     response = requests.get(AWC_PROG_PAGE)
     data = response.text
     soup = BeautifulSoup(data, features='html.parser')
@@ -26,6 +36,10 @@ def get_prog():
 
 
 def get_forecast():
+    """
+    Calls the DarkSky weather API and returns the relevant weather data.
+    :return: dict current weather data, dict forecast outlook for the day, dict 10 hours of hourly forecasts
+    """
     weather_data = requests.get(DARKSKY_HOURLY).json()
 
     current_data = {
